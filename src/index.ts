@@ -34,10 +34,10 @@ document.body.append(renderer.domElement)
 renderer.render(scene, camera)
 
 // 控制器
-const controls = new OrbitControls(camera, renderer.domElement)
-controls.enableDamping = true
-const axesHelper = new THREE.AxesHelper(5)
-scene.add(axesHelper)
+// const controls = new OrbitControls(camera, renderer.domElement)
+// controls.enableDamping = true
+// const axesHelper = new THREE.AxesHelper(5)
+// scene.add(axesHelper)
 
 const group = new TWEEN.Group()
 
@@ -45,13 +45,14 @@ let isFirst = true
 const maxPoint = 30000
 let geometryAni: any = null //
 let points: any = null //
+
 // 创建星空背景
 function createSky() {
   const vertices: any[] = []
   for (let i = 0; i < 1000; i++) {
-    const x = THREE.MathUtils.randFloatSpread(2000)
-    const y = THREE.MathUtils.randFloatSpread(2000)
-    const z = THREE.MathUtils.randFloatSpread(2000)
+    const x = THREE.MathUtils.randFloatSpread(window.innerWidth / 2)
+    const y = THREE.MathUtils.randFloatSpread(window.innerHeight / 2)
+    const z = THREE.MathUtils.randFloatSpread(1000)
     vertices.push(x, y, z)
   }
   const geometry = new THREE.BufferGeometry()
@@ -66,6 +67,7 @@ function createSky() {
   const skyPoints = new THREE.Points(geometry, material)
 
   scene.add(skyPoints)
+  return skyPoints
 }
 
 // 创建点 后面动画使用
@@ -215,11 +217,18 @@ function loadOBIFN(startPositions) {
     }
   )
 }
+
+let skyPointsObj: any = null
+let skyPointsObj2: any = null
+let skyPointsObj3: any = null
+
 function render() {
   requestAnimationFrame(render)
   TWEEN.update()
-  // scene.rotation.y += 0.001
-  controls.update()
+  skyPointsObj.rotation.y += 0.001
+  skyPointsObj2.rotation.x += 0.001
+  skyPointsObj2.rotation.z += 0.001
+  // controls.update()
   group.update()
   renderer.render(scene, camera)
 
@@ -241,23 +250,27 @@ function mousemoveFN() {
     const deltaY = event.clientY - centerY
 
     // 将距离转换为角度并限制最大旋转角度
-    const maxAngle = Math.PI / 36 // 5度对应的弧度值
-    const angleX = ((deltaY / centerY) * Math.PI) % 30
-    const angleY = ((deltaX / centerX) * Math.PI) % 30
+    const maxAngle = Math.PI / 30 // 5度对应的弧度值
+    const angleX = (deltaY / centerY) * maxAngle
+    const angleY = (deltaX / centerX) * maxAngle
 
     // 应用旋转到立方体
     // points.rotation.x = angleX
+    points.rotation.x = angleX
     points.rotation.y = angleY
+    console.log(points.rotation.y)
   })
 }
 let isleft = true
 
 function init() {
-  createSky()
+  skyPointsObj = createSky()
+  skyPointsObj2 = createSky()
+  skyPointsObj3 = createSky()
   const startPositions = createPoint(10)
   loadOBIFN(startPositions)
   render()
-  // mousemoveFN()
+  mousemoveFN()
 
   setInterval(() => {
     loadOBIFN(startPositions)
