@@ -43,3 +43,6 @@ renderer.render(scene, camera)
 
 ## 粒子动画
 [学习文章](https://juejin.cn/post/7053759220188971044)
+
+## 注意
+count = array.length/3

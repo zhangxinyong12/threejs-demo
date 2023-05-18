@@ -41,6 +41,7 @@ scene.add(axesHelper)
 
 const group = new TWEEN.Group()
 
+let isFirst = true
 const maxPoint = 30000
 let geometryAni: any = null //
 let points: any = null //
@@ -101,28 +102,42 @@ function random(max = 200) {
 
 // 加载OBJ文件 成功后的回调函数
 function OBJLoaderFunction(obj, startPositions) {
-  // 先根据模型创建随机点
-  const vertices: any[] = []
-
-  obj.children.forEach((item, index) => {
-    const itemGeometry = item.geometry // 获取模型的几何体
-    console.log(itemGeometry)
-    const count = itemGeometry.attributes.position.count
-    const M = 50
-    for (let i = 0; i < count; i++) {
-      const x = THREE.MathUtils.randFloatSpread(M) - 200
+  isleft = !isleft
+  if (isFirst) {
+    // 先根据模型创建随机点
+    let M = 50
+    // 数组按照 小 大 小 排序
+    const listN: number[] = []
+    const vertices: any[] = []
+    obj.children.forEach((item, index) => {
+      const itemGeometry = item.geometry // 获取模型的几何体
+      const count = itemGeometry.attributes.position.count
+      listN.push(count)
+    })
+    const totalCount = listN.reduce((a, b) => a + b)
+    const spead = 0.1
+    for (let i = 0; i < totalCount; i++) {
+      if (i < totalCount / 2) {
+        M = M + spead
+      } else {
+        M = M - spead
+      }
+      const x = THREE.MathUtils.randFloatSpread(M) - (isleft ? 200 : -200)
       const y = THREE.MathUtils.randFloatSpread(M)
       const z = THREE.MathUtils.randFloatSpread(M)
       vertices.push(x, y, z)
     }
-  })
-  geometryAni.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute(vertices, 3)
-  )
+
+    console.log(listN)
+    geometryAni.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(vertices, 3)
+    )
+  }
+
   startPositions = geometryAni.getAttribute("position") // 获取顶点位置
 
-  console.log("星云点数创建完成", startPositions.count, startPositions.array)
+  console.log("星云点数创建完成", startPositions.count)
 
   let index_n = 0 // 记录全部点数的index
   let max = 0
@@ -140,18 +155,18 @@ function OBJLoaderFunction(obj, startPositions) {
       })
     )
     const itemPoints = particleSystem.geometry.getAttribute("position") // 获取顶点位置
-    console.log("itemPoints", itemPoints.array)
     for (let i = 0; i < itemPoints.count; i++) {
       // 放大倍数
       const p = 0.5
       const tween = new TWEEN.Tween(startPositions.array)
         .to(
           {
-            [i * 3 + index_n]: itemPoints.array[i * 3] * p + 100, // x轴偏移100
+            [i * 3 + index_n]:
+              itemPoints.array[i * 3] * p + (isleft ? 100 : -100), // x轴偏移100
             [i * 3 + 1 + index_n]: itemPoints.array[i * 3 + 1] * p,
             [i * 3 + 2 + index_n]: itemPoints.array[i * 3 + 2] * p,
           },
-          3000
+          3000 * Math.random() + 1000
         )
         .easing(TWEEN.Easing.Quadratic.Out)
         // .repeat(Infinity)
@@ -172,6 +187,7 @@ function OBJLoaderFunction(obj, startPositions) {
     particleSystem.scale.set(0.5, 0.5, 0.5)
     // scene.add(particleSystem) // 将粒子系统加入到场景中
   })
+  isFirst = false
   console.log(index_n)
 
   console.log("obj模型点数", max)
@@ -204,7 +220,7 @@ function loadOBIFN(startPositions) {
 function render() {
   requestAnimationFrame(render)
   TWEEN.update()
-  scene.rotation.y += 0.001
+  // scene.rotation.y += 0.001
   controls.update()
   group.update()
   renderer.render(scene, camera)
@@ -236,6 +252,7 @@ function mousemoveFN() {
     points.rotation.y = angleY
   })
 }
+let isleft = true
 
 function init() {
   createSky()
@@ -243,6 +260,10 @@ function init() {
   loadOBIFN(startPositions)
   render()
   // mousemoveFN()
+
+  setInterval(() => {
+    loadOBIFN(startPositions)
+  }, 10000)
 }
 
 init()
