@@ -104,6 +104,9 @@ function random(max = 200) {
 
 // 加载OBJ文件 成功后的回调函数
 function OBJLoaderFunction(obj, startPositions) {
+  // 取消动画
+  TWEEN.removeAll()
+
   isleft = !isleft
   // 先根据模型创建随机点
   let M = 50
@@ -155,6 +158,8 @@ function OBJLoaderFunction(obj, startPositions) {
       })
     )
     const itemPoints = particleSystem.geometry.getAttribute("position") // 获取顶点位置
+
+    console.log(particleSystem.geometry)
     for (let i = 0; i < itemPoints.count; i++) {
       // 放大倍数
       const p = 0.5
@@ -166,12 +171,12 @@ function OBJLoaderFunction(obj, startPositions) {
             [i * 3 + 1 + index_n]: itemPoints.array[i * 3 + 1] * p,
             [i * 3 + 2 + index_n]: itemPoints.array[i * 3 + 2] * p,
           },
-          3000 * Math.random()
+          1000 * Math.random()
         )
         .easing(TWEEN.Easing.Quadratic.Out)
         // .repeat(Infinity)
         // .yoyo(true)
-        .delay(1000 * Math.random())
+        .delay(300 * Math.random())
         .onUpdate(() => {
           startPositions.needsUpdate = true // 告诉渲染器需要更新顶点位置
         })
@@ -259,6 +264,35 @@ function mousemoveFN() {
     points.rotation.y = angleY
   })
 }
+
+// 防抖函数
+function debounce(callback: Function, delay: number) {
+  let timer: ReturnType<typeof setTimeout>
+  return function () {
+    const args = arguments
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      callback.apply(this, args)
+    }, delay)
+  }
+}
+
+// 监听鼠标滚轮事件 切换动画
+function mousewheelFN(startPositions: number) {
+  const loadOBIDebounced = debounce(() => loadOBIFN(startPositions), 200)
+
+  document.addEventListener("wheel", (event: WheelEvent) => {
+    console.log(event.deltaY)
+    if (event.deltaY < 0) {
+      // 向上滚动
+      loadOBIDebounced()
+    } else {
+      // 向下滚动
+      loadOBIDebounced()
+    }
+  })
+}
+
 let isleft = true
 
 function init() {
@@ -269,10 +303,7 @@ function init() {
   loadOBIFN(startPositions)
   render()
   mousemoveFN()
-
-  setInterval(() => {
-    loadOBIFN(startPositions)
-  }, 10000)
+  mousewheelFN(startPositions)
 }
 
 init()
