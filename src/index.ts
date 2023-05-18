@@ -255,10 +255,8 @@ function mousemoveFN() {
     const angleY = (deltaX / centerX) * maxAngle
 
     // 应用旋转到立方体
-    // points.rotation.x = angleX
     points.rotation.x = angleX
     points.rotation.y = angleY
-    console.log(points.rotation.y)
   })
 }
 let isleft = true
